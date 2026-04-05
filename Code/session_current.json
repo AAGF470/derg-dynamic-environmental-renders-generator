@@ -1,0 +1,32 @@
+{
+  "engine": "blender",
+  "renders": [
+    {
+      "id": 1,
+      "sky": "clear",
+      "weather": "snow",
+      "terrain": "flat",
+      "location": "farmland",
+      "camera": null,
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "sky": "clear",
+      "weather": "snow",
+      "terrain": "mountainous",
+      "location": "grassland",
+      "camera": null,
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "sky": "dawn",
+      "weather": "rain",
+      "terrain": "flat",
+      "location": "farmland",
+      "camera": null,
+      "status": "pending"
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "render_id": 3,
+  "sky": "dawn",
+  "weather": "rain",
+  "terrain": "flat",
+  "location": "farmland",
+  "hdri": "dawn_03.hdr",
+  "ground_material": "MAT_Dirt_01",
+  "grass_system": "GS_Dirt_Sparse",
+  "terrain_mesh": "TERRAIN_Flat_01",
+  "terrain_scale": 1.006,
+  "weather_data": {
+    "precipitation": true,
+    "particle_system": "PS_Rain",
+    "wind": 0.6,
+    "wetness": 1.0,
+    "ground_fog": {
+      "enabled": false,
+      "density": 0.0,
+      "height": 0.0
+    },
+    "atmospheric": {
+      "enabled": true,
+      "density": 0.05,
+      "distance": 60.0
+    }
+  },
+  "assets": [
+    {
+      "asset_name": "TREE_Oak_02",
+      "asset_type": "tree",
+      "x": 332.478,
+      "y": 191.675,
+      "z": 0.0,
+      "scale": 1.0,
+      "rotation": 351.19
+    },
+    {
+      "asset_name": "TREE_Pine_01",
+      "asset_type": "tree",
+      "x": 375.87,
+      "y": 209.473,
+      "z": 0.0,
+      "scale": 0.97,
+      "rotation": 27.09
+    },
+    {
+      "asset_name": "TREE_Oak_01",
+      "asset_type": "tree",
+      "x": 339.645,
+      "y": 144.861,
+      "z": 0.0,
+      "scale": 0.879,
+      "rotation": 296.07
+    },
+    {
+      "asset_name": "TREE_Dead_01",
+      "asset_type": "tree",
+      "x": 386.16,
+      "y": 213.176,
+      "z": 0.0,
+      "scale": 0.982,
+      "rotation": 243.01
+    },
+    {
+      "asset_name": "TREE_Dead_01",
+      "asset_type": "tree",
+      "x": 348.129,
+      "y": 176.963,
+      "z": 0.0,
+      "scale": 0.982,
+      "rotation": 59.97
+    },
+    {
+      "asset_name": "TREE_Pine_02",
+      "asset_type": "tree",
+      "x": 382.553,
+      "y": 181.599,
+      "z": 0.0,
+      "scale": 1.109,
+      "rotation": 228.94
+    },
+    {
+      "asset_name": "TREE_Oak_02",
+      "asset_type": "tree",
+      "x": 368.663,
+      "y": 191.131,
+      "z": 0.0,
+      "scale": 0.866,
+      "rotation": 181.74
+    },
+    {
+      "asset_name": "ROCK_Large_02",
+      "asset_type": "rock",
+      "x": 235.337,
+      "y": 339.035,
+      "z": 0.0,
+      "scale": 0.961,
+      "rotation": 320.77
+    },
+    {
+      "asset_name": "ROCK_Small_02",
+      "asset_type": "rock",
+      "x": 196.598,
+      "y": 368.484,
+      "z": 0.0,
+      "scale": 0.808,
+      "rotation": 70.46
+    },
+    {
+      "asset_name": "STRUCT_Shed_02",
+      "asset_type": "structure",
+      "x": 25.133,
+      "y": 327.582,
+      "z": 0.0,
+      "scale": 1.058,
+      "rotation": 107.66
+    },
+    {
+      "asset_name": "STRUCT_Shed_01",
+      "asset_type": "structure",
+      "x": 154.927,
+      "y": 42.3,
+      "z": 0.0,
+      "scale": 0.961,
+      "rotation": 28.96
+    },
+    {
+      "asset_name": "STRUCT_Shed_01",
+      "asset_type": "structure",
+      "x": 49.018,
+      "y": 40.263,
+      "z": 0.0,
+      "scale": 0.92,
+      "rotation": 285.0
+    },
+    {
+      "asset_name": "STRUCT_Shed_01",
+      "asset_type": "structure",
+      "x": 318.238,
+      "y": 302.647,
+      "z": 0.0,
+      "scale": 1.078,
+      "rotation": 105.91
+    },
+    {
+      "asset_name": "FOLIAGE_Weed_02",
+      "asset_type": "foliage",
+      "x": 273.632,
+      "y": 146.213,
+      "z": 0.0,
+      "scale": 1.019,
+      "rotation": 349.18
+    },
+    {
+      "asset_name": "FOLIAGE_Weed_02",
+      "asset_type": "foliage",
+      "x": 219.759,
+      "y": 126.338,
+      "z": 0.0,
+      "scale": 1.134,
+      "rotation": 101.88
+    },
+    {
+      "asset_name": "FOLIAGE_Weed_02",
+      "asset_type": "foliage",
+      "x": 284.569,
+      "y": 119.183,
+      "z": 0.0,
+      "scale": 1.038,
+      "rotation": 63.36
+    },
+    {
+      "asset_name": "FOLIAGE_Bush_02",
+      "asset_type": "foliage",
+      "x": 261.228,
+      "y": 159.681,
+      "z": 0.0,
+      "scale": 0.897,
+      "rotation": 30.63
+    },
+    {
+      "asset_name": "FOLIAGE_Bush_02",
+      "asset_type": "foliage",
+      "x": 270.455,
+      "y": 171.32,
+      "z": 0.0,
+      "scale": 0.942,
+      "rotation": 283.4
+    },
+    {
+      "asset_name": "FOLIAGE_Bush_02",
+      "asset_type": "foliage",
+      "x": 280.03,
+      "y": 124.243,
+      "z": 0.0,
+      "scale": 0.807,
+      "rotation": 284.9
+    },
+    {
+      "asset_name": "FOLIAGE_Weed_02",
+      "asset_type": "foliage",
+      "x": 266.343,
+      "y": 145.927,
+      "z": 0.0,
+      "scale": 0.815,
+      "rotation": 124.31
+    }
+  ]
+}
