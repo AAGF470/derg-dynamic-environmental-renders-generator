@@ -1,0 +1,9 @@
+# Large assets — transfer manually via external drive
+hdri/
+Code/assets/
+outputs/
+*.blend1
+
+# macOS metadata
+._*
+.DS_Store

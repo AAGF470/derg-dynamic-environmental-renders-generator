@@ -23,9 +23,9 @@ from mathutils import Vector
 # One continuous 12,000 frame animation split into 3 output files
 
 STAGES = [
-    { "name": "stage_1_prelaunch", "start": 1,    "end": 4000  },
-    { "name": "stage_2_launch",    "start": 4001,  "end": 8000  },
-    { "name": "stage_3_ascent",    "start": 8001,  "end": 12000 },
+    { "name": "stage_1_prelaunch", "start": 1,  "end": 10 },
+    { "name": "stage_2_launch",    "start": 11, "end": 20 },
+    { "name": "stage_3_ascent",    "start": 21, "end": 30 },
 ]
 
 ROCKET_OBJECT_NAME = "Rocket_Mesh"
@@ -389,9 +389,10 @@ def render_stage(stage: dict, output_dir: Path,
                  scene: bpy.types.Scene,
                  camera: bpy.types.Object) -> None:
     """
-    Renders one stage as a video file and writes the bbox JSON.
-    Sets the frame range, output path, and triggers the render.
-    Bbox is computed for every frame in the range.
+    Renders one stage as a PNG frame sequence and writes the bbox JSON.
+    Frames land in output_dir/stage_name/####.png
+    render_collector.py handles converting the sequence to mp4 via ffmpeg
+    after Blender exits — this keeps Blender 5.0 compatible.
     """
     stage_name  = stage["name"]
     frame_start = stage["start"]
@@ -399,13 +400,16 @@ def render_stage(stage: dict, output_dir: Path,
 
     log("INFO", f"Rendering {stage_name} (frames {frame_start}–{frame_end})")
 
-    # ── set output path for video ─────────────────────────────────────────
-    video_path = output_dir / f"{stage_name}.mp4"
-    scene.render.filepath        = str(video_path)
-    scene.render.image_settings.file_format = 'FFMPEG'
-    scene.render.ffmpeg.format             = 'MPEG4'
-    scene.render.ffmpeg.codec              = 'H264'
-    scene.render.ffmpeg.constant_rate_factor = 'MEDIUM'
+    # ── create stage subfolder for PNG frames ─────────────────────────────
+    # frames land at: outputs/render_001/stage_1_prelaunch/0001.png
+    frames_dir = output_dir / stage_name
+    frames_dir.mkdir(parents=True, exist_ok=True)
+
+    # ── configure PNG output ──────────────────────────────────────────────
+    scene.render.filepath = str(frames_dir) + "/"
+    scene.render.image_settings.file_format      = 'PNG'
+    scene.render.image_settings.color_mode       = 'RGB'
+    scene.render.image_settings.compression      = 15    # 0-100, lower = faster write
 
     # ── set frame range ───────────────────────────────────────────────────
     scene.frame_start = frame_start
@@ -417,15 +421,15 @@ def render_stage(stage: dict, output_dir: Path,
     for frame in range(frame_start, frame_end + 1):
         bbox_data.append(get_rocket_bbox_2d(scene, camera, frame))
 
-    # write bbox JSON alongside the video
+    # write bbox JSON alongside the frames folder
     bbox_path = output_dir / f"{stage_name}_bbox.json"
     with open(bbox_path, "w", encoding="utf-8") as f:
         json.dump(bbox_data, f, indent=2)
     log("INFO", f"Bbox JSON written to {bbox_path}")
 
-    # ── render the video ──────────────────────────────────────────────────
+    # ── render PNG sequence ───────────────────────────────────────────────
     bpy.ops.render.render(animation=True)
-    log("INFO", f"{stage_name} render complete → {video_path}")
+    log("INFO", f"{stage_name} frames complete → {frames_dir}")
 
 
 # ── Main execution ────────────────────────────────────────────────────────────
