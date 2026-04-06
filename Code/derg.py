@@ -1,12 +1,12 @@
 import json
 import logging
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 import random
-from Code.derg_assets import SKY_POOL, WEATHER_POOL, TERRAIN_POOL, LOCATION_POOL
-from Code.builder import build_scene
+from .derg_assets import SKY_POOL, WEATHER_POOL, TERRAIN_POOL, LOCATION_POOL
+from .builder import build_scene
+from .render_collector import collect_render
 
 logging.basicConfig(
     level=logging.INFO,
@@ -59,7 +59,7 @@ def validate_job(session: dict[str, Any]) -> bool:
         for render in session["renders"]:
             render_id = render["id"]
 
-            for field in ["sky", "weather", "terrain", "location"]:
+            for field in ["sky", "weather", "terrain", "location", "camera"]:
                 value = render[field]
                 if value is not None and not isinstance(value, (str, list)):
                     log.error("Render %s field '%s' must be null, a string, or a list", render_id, field)
@@ -117,6 +117,9 @@ def main() -> None:
 
     context(session, session_path)
 
+    # read blender exe from session if provided, otherwise auto-detect
+    blender_exe = session.get("blender_exe", None)
+
     for each_render in session["renders"]:
         if each_render["status"] in ("done", "failed"):
             log.info("Render %s skipped — %s", each_render["id"], each_render["status"])
@@ -133,11 +136,19 @@ def main() -> None:
             save_session(session, session_path)
             continue
 
-        # ── Stage 2: render (render_collector — not yet wired) ────────────
-        # TODO: status, output_dir = collect_render(manifest_path)
-        # TODO: verify output files on disk
-        # TODO: each_render["status"] = "done" or "failed"
-        # TODO: save_session(session, session_path)
+        # ── Stage 2: launch blender, poll for output ───────────────────────
+        status, output_dir = collect_render(manifest_path, blender_exe)
+
+        if status == "FAIL":
+            log.error("Render %s failed at render stage — skipping.", each_render["id"])
+            each_render["status"] = "failed"
+            save_session(session, session_path)
+            continue
+
+        # ── Stage 3: mark complete ─────────────────────────────────────────
+        each_render["status"] = "done"
+        save_session(session, session_path)
+        log.info("Render %s complete → %s", each_render["id"], output_dir)
 
     log.info("━━  Session complete  ━━")
 
