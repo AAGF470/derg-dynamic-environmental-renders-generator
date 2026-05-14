@@ -4,16 +4,9 @@ import sys
 from pathlib import Path
 from typing import Any
 import random
-
-# Support both direct execution (python derg.py) and package import (python -m Code.derg)
-try:
-    from .derg_assets import SKY_POOL, WEATHER_POOL, TERRAIN_POOL, LOCATION_POOL
-    from .builder import build_scene
-    from .render_collector import collect_render
-except ImportError:
-    from derg_assets import SKY_POOL, WEATHER_POOL, TERRAIN_POOL, LOCATION_POOL
-    from builder import build_scene
-    from render_collector import collect_render
+from .derg_assets import SKY_POOL, WEATHER_POOL, TERRAIN_POOL, LOCATION_POOL
+from .builder import build_scene
+from .render_collector import collect_render
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,7 +16,6 @@ logging.basicConfig(
 log = logging.getLogger("DERG")
 
 # Local pool map — used by context() to resolve null fields
-# camera is intentionally absent — null camera is valid and means "use scene default"
 POOL_MAP = {
     "sky":      SKY_POOL,
     "weather":  WEATHER_POOL,
@@ -89,8 +81,6 @@ def context(session: dict[str, Any], path: str) -> None:
     Standardizes the session JSON — resolves null and list fields
     into single concrete string values via random selection.
 
-    Applies to: sky, weather, terrain, location.
-    camera is left as-is — null means "use the scene's active camera".
     Does not edit done or failed renders.
     Writes the resolved session back to disk immediately.
     """
@@ -130,15 +120,9 @@ def main() -> None:
     # read blender exe from session if provided, otherwise auto-detect
     blender_exe = session.get("blender_exe", None)
 
-    pending = [r for r in session["renders"] if r["status"] == "pending"]
-    if not pending:
-        log.warning("No pending renders found in session — nothing to do.")
-        log.warning("Reset render status to 'pending' in %s to reprocess.", session_path)
-        sys.exit(0)
-
     for each_render in session["renders"]:
         if each_render["status"] in ("done", "failed"):
-            log.info("Render %s skipped — status is '%s'", each_render["id"], each_render["status"])
+            log.info("Render %s skipped — %s", each_render["id"], each_render["status"])
             continue
 
         log.info("━━  Render %s  ━━", each_render["id"])

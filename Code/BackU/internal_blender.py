@@ -20,9 +20,7 @@ from mathutils import Vector
 
 
 # ── Stage definitions ─────────────────────────────────────────────────────────
-# One continuous animation split into 3 output PNG sequences.
-# Frame ranges are set here and respected by both render_stage() and render_collector.py.
-# FRAMES_PER_STAGE in render_collector.py must match the width of each range (end - start + 1).
+# One continuous 12,000 frame animation split into 3 output files
 
 STAGES = [
     { "name": "stage_1_prelaunch", "start": 1,  "end": 10 },
@@ -146,7 +144,7 @@ def duplicate_asset(source_name: str, x: float, y: float, z: float,
     new_obj.location = (x, y, z)
     new_obj.scale    = (scale, scale, scale)
 
-    # rotation is Z-axis (yaw) — correct for ground-placed objects in Blender's Z-up convention
+    # rotation is Y-axis only (vertical axis in Blender Z-up)
     new_obj.rotation_euler = (0.0, 0.0, math.radians(rotation))
 
     # make visible for rendering

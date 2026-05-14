@@ -18,22 +18,15 @@ BLEND_FILE      = Path("DergScene.blend")
 INTERNAL_SCRIPT = Path("Code/internal_blender.py")
 
 # ── Render settings ───────────────────────────────────────────────────────────
-POLL_INTERVAL    = 60       # seconds between output checks
-TIMEOUT_MINUTES  = 120      # kill blender after 2 hours
-FRAMES_PER_STAGE = 4000     # frames per stage (1-4000, 4001-8000, 8001-12000)
+POLL_INTERVAL   = 60      # seconds between output checks
+TIMEOUT_MINUTES = 120     # kill blender after 2 hours
+FRAMES_PER_STAGE = 10   # expected frame count per stage
 
 STAGE_NAMES = [
     "stage_1_prelaunch",
     "stage_2_launch",
     "stage_3_ascent",
 ]
-
-# First frame number for each stage — ffmpeg needs this to find the sequence
-STAGE_START_FRAMES = {
-    "stage_1_prelaunch": 1,
-    "stage_2_launch":    4001,
-    "stage_3_ascent":    8001,
-}
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -52,7 +45,7 @@ def get_blender_exe() -> str:
     if system == "Darwin":
         return "/Applications/Blender.app/Contents/MacOS/Blender"
     elif system == "Windows":
-        return "C:\\Program Files\\Blender Foundation\\Blender 5.0\\blender.exe"
+        return "C:\\Program Files\\Blender Foundation\\Blender 4.0\\blender.exe"
     else:
         return "blender"
 
@@ -92,10 +85,12 @@ def verify_render(output_dir: Path) -> bool:
     This is the completion signal — not Blender's exit code.
     """
     for stage_name in STAGE_NAMES:
+        # check frame count
         frame_count = count_stage_frames(output_dir, stage_name)
         if frame_count < FRAMES_PER_STAGE:
             return False
 
+        # check bbox JSON exists and is non-empty
         bbox_path = output_dir / f"{stage_name}_bbox.json"
         if not bbox_path.exists() or bbox_path.stat().st_size == 0:
             return False
@@ -129,6 +124,7 @@ def launch_blender(manifest_path: Path, blender_exe: str) -> subprocess.Popen:
         "--python", str(INTERNAL_SCRIPT),
     ]
 
+    # pass manifest path via env var — avoids CLI escaping issues
     env = os.environ.copy()
     env["DERG_MANIFEST"] = str(manifest_path)
 
@@ -153,6 +149,7 @@ def poll_until_complete(process: subprocess.Popen, output_dir: Path) -> str:
         time.sleep(POLL_INTERVAL)
         elapsed += POLL_INTERVAL
 
+        # log per-stage progress so the user can see what's happening
         for stage_name in STAGE_NAMES:
             count = count_stage_frames(output_dir, stage_name)
             log.info("%s — %d / %d frames", stage_name, count, FRAMES_PER_STAGE)
@@ -167,6 +164,7 @@ def poll_until_complete(process: subprocess.Popen, output_dir: Path) -> str:
             process.terminate()
             return "FAIL"
 
+    # Blender exited on its own — final check
     log.info("Blender process exited — running final output check")
     if verify_render(output_dir):
         return "OK"
@@ -181,26 +179,27 @@ def convert_stage_to_mp4(output_dir: Path, stage_name: str,
                           ffmpeg_exe: str, fps: int = 60) -> bool:
     """
     Converts a PNG frame sequence to mp4 using ffmpeg.
-    Uses -start_number so ffmpeg finds the correct frame range for each stage:
-      stage_1: 0001.png – 4000.png  (start_number=1)
-      stage_2: 4001.png – 8000.png  (start_number=4001)
-      stage_3: 8001.png – 12000.png (start_number=8001)
+    Input:  output_dir/stage_name/%04d.png
+    Output: output_dir/stage_name.mp4
+
+    Returns True on success, False on failure.
+    ffmpeg must be installed and on PATH.
     """
-    frames_dir   = output_dir / stage_name
-    output_mp4   = output_dir / f"{stage_name}.mp4"
-    start_number = STAGE_START_FRAMES[stage_name]
+    frames_dir = output_dir / stage_name
+    output_mp4 = output_dir / f"{stage_name}.mp4"
+
+    # %04d matches Blender's default frame naming: 0001.png, 0002.png etc
     input_pattern = str(frames_dir / "%04d.png")
 
     cmd = [
         ffmpeg_exe,
-        "-y",
-        "-start_number", str(start_number),
+        "-y",                          # overwrite output if exists
         "-framerate", str(fps),
-        "-i", input_pattern,
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
-        "-crf", "18",
-        "-preset", "fast",
+        "-i", input_pattern,           # input PNG sequence
+        "-c:v", "libx264",             # H.264 codec
+        "-pix_fmt", "yuv420p",         # compatible pixel format
+        "-crf", "18",                  # quality — lower = better (18 is high quality)
+        "-preset", "fast",             # encoding speed vs compression tradeoff
         str(output_mp4),
     ]
 
@@ -221,10 +220,10 @@ def convert_all_stages(output_dir: Path, ffmpeg_exe: str, fps: int = 60) -> bool
     Converts all 3 stage PNG sequences to mp4.
     Returns True only if all 3 conversions succeed.
     """
-    results = [
-        convert_stage_to_mp4(output_dir, stage_name, ffmpeg_exe, fps)
-        for stage_name in STAGE_NAMES
-    ]
+    results = []
+    for stage_name in STAGE_NAMES:
+        success = convert_stage_to_mp4(output_dir, stage_name, ffmpeg_exe, fps)
+        results.append(success)
 
     if not all(results):
         log.error("One or more stage conversions failed")
@@ -243,13 +242,16 @@ def collect_render(manifest_path: Path, blender_exe: str = None) -> tuple[str, A
     PNG frame completion, then converts to mp4 via ffmpeg.
     Returns ("OK", output_dir) or ("FAIL", None).
     """
+    # resolve executables
     if blender_exe is None:
         blender_exe = get_blender_exe()
     ffmpeg_exe = get_ffmpeg_exe()
 
+    # preflight
     if not verify_blend(BLEND_FILE):
         return ("FAIL", None)
 
+    # read output_dir from manifest
     try:
         with open(manifest_path, "r", encoding="utf-8") as f:
             manifest = json.load(f)
@@ -259,6 +261,7 @@ def collect_render(manifest_path: Path, blender_exe: str = None) -> tuple[str, A
         log.error("Could not read manifest at %s — %s", manifest_path, e)
         return ("FAIL", None)
 
+    # ── launch and poll ───────────────────────────────────────────────────
     process = launch_blender(manifest_path, blender_exe)
     result  = poll_until_complete(process, output_dir)
 
@@ -266,6 +269,7 @@ def collect_render(manifest_path: Path, blender_exe: str = None) -> tuple[str, A
         log.error("Render %s failed during Blender stage", render_id)
         return ("FAIL", None)
 
+    # ── convert PNG sequences to mp4 ─────────────────────────────────────
     log.info("Blender complete — starting ffmpeg conversion")
     converted = convert_all_stages(output_dir, ffmpeg_exe)
 
@@ -273,6 +277,7 @@ def collect_render(manifest_path: Path, blender_exe: str = None) -> tuple[str, A
         log.error("Render %s failed during ffmpeg conversion", render_id)
         return ("FAIL", None)
 
+    # ── final mp4 verification ────────────────────────────────────────────
     if not verify_mp4s(output_dir):
         log.error("Render %s — mp4 files missing after conversion", render_id)
         return ("FAIL", None)

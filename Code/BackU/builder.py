@@ -10,10 +10,7 @@ import math
 import random
 from pathlib import Path
 from typing import Any
-try:
-    from .derg_assets import ASSETS, LOCATION, SKY, WEATHER, TERRAIN, MATERIALS
-except ImportError:
-    from derg_assets import ASSETS, LOCATION, SKY, WEATHER, TERRAIN, MATERIALS
+from Code.derg_assets import ASSETS, LOCATION, SKY, WEATHER, TERRAIN, MATERIALS
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(message)s",
@@ -62,19 +59,12 @@ def in_bounds(x: float, y: float) -> bool:
     return 0.0 <= x <= GRID_SIZE and 0.0 <= y <= GRID_SIZE
 def edge_weight(x: float, y: float) -> float:
     """
-    Returns a 0.0–1.0 weight based on distance from the pad center.
-    Used as a placement probability gate — assets closer to the pad center
-    are less likely to place, biasing density toward the grid edges.
-
-    The falloff is linear from PAD_RADIUS (weight 0.0) to half the grid
-    diagonal (weight 1.0), then clamped. Assets inside the pad zone are
-    already rejected by valid_position() before this is ever called.
+    Returns a 0.0-1.0 weight based on distance from pad center.
+    0.0 = at the pad, 1.0 = at the grid edge.
+    Used for density falloff — assets more likely near edges.
     """
     dist = distance(x, y, PAD_CENTER[0], PAD_CENTER[1])
-    # remap: PAD_RADIUS → 0.0, half grid diagonal → 1.0
-    half_diag = math.sqrt(2) * GRID_SIZE / 2
-    weight = (dist - PAD_RADIUS) / (half_diag - PAD_RADIUS)
-    return max(0.0, min(weight, 1.0))
+    return min(dist / (GRID_SIZE / 2), 1.0)
 def too_close(x: float, y: float, existing: list, min_dist: float) -> bool:
     """
     Returns True if (x, y) is within min_dist of any existing Pointer.
@@ -115,7 +105,7 @@ def pick_asset(asset_type: str, location: str) -> str:
         log.warning("No assets found for type '%s' in location '%s'", asset_type, location)
         return ""
     return random.choice(pool)["name"]
-#--------------- Asset Initialisation -------------------
+#--------------- Asset Intilization -------------------
 
 def random_scale(base: float = 1.0, variance: float = 0.2) -> float:
     """Returns a randomised scale value centered on base. variance of 0.2 = ±20%."""
@@ -123,7 +113,7 @@ def random_scale(base: float = 1.0, variance: float = 0.2) -> float:
 
 
 def random_rotation() -> float:
-    """Returns a random Z-axis rotation (yaw) in degrees 0–360."""
+    """Returns a random Y-axis rotation in degrees 0-360."""
     return round(random.uniform(0.0, 360.0), 2)
     
 class Pointer:
@@ -290,7 +280,7 @@ def write_manifest(render: dict[str, Any], pointers: dict[str, list[Pointer]], o
                 "y":          p.y,            # world Y position in the 400x400 grid
                 "z":          p.z,            # always 0.0 — Blender resolves actual height via shrinkwrap
                 "scale":      p.scale,        # uniform scale to apply
-                "rotation":   p.rotation,     # Z axis rotation (yaw) in degrees
+                "rotation":   p.rotation,     # Y axis rotation in degrees
             })
 
     # build the output path — scene_manifest.json sits inside the render's output folder

@@ -201,14 +201,11 @@ ASSETS: dict[str, list[dict]] = {
     ],
 
     "structure": [
-        { "name": "STRUCT_Shed_01",      "tags": ["farmland"] },
-        { "name": "STRUCT_Shed_02",      "tags": ["farmland"] },
-        { "name": "STRUCT_Barn_01",      "tags": ["farmland"] },
-        { "name": "STRUCT_House_01",     "tags": ["grassland"] },
-        { "name": "STRUCT_House_02",     "tags": ["grassland"] },
-        { "name": "STRUCT_Container_01", "tags": ["universal"] },
-        { "name": "STRUCT_Container_02", "tags": ["universal"] },
-        { "name": "STRUCT_Tower_01",     "tags": ["universal"] },
+        { "name": "STRUCT_Shed_01",   "tags": ["farmland"] },
+        { "name": "STRUCT_Shed_02",   "tags": ["farmland"] },
+        { "name": "STRUCT_Barn_01",   "tags": ["farmland"] },
+        { "name": "STRUCT_House_01",  "tags": ["grassland"] },
+        { "name": "STRUCT_House_02",  "tags": ["grassland"] },
     ],
 
     "foliage": [
@@ -228,9 +225,10 @@ ASSETS: dict[str, list[dict]] = {
 
 
 # ── Cameras ───────────────────────────────────────────────────────────────────
-# Intentionally empty — camera presets pending confirmation of real hardware
-# focal lengths and sensor sizes. Once confirmed, add entries here and update
-# builder.py to select one per render and internal_blender.py to apply it.
-# Each preset must match an actual camera object name in DergScene.blend.
+# TODO: add camera presets once real camera specs are confirmed
+# Each preset must match actual hardware focal length and sensor size
+# builder.py selects one per render, internal_blender.py applies it
 
-CAMERAS: dict[str, dict] = {}
+CAMERAS = {
+
+}
